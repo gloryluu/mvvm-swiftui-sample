@@ -13,16 +13,12 @@ class JokeListViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var error: Error?
     private var jokeRepository: JokeRepository = JokeRepository()
-    private var cancellable: AnyCancellable?
-    
-    deinit {
-        cancellable?.cancel()
-    }
+    var subscriptions = Set<AnyCancellable>()
     
     func getJoke() {
         isLoading = true
         
-        cancellable = jokeRepository
+        jokeRepository
             .getJoke()
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { completion in
@@ -36,5 +32,6 @@ class JokeListViewModel: ObservableObject {
                 self.isLoading = false
                 self.jokes.insert($0, at: 0)
             })
+            .store(in: &subscriptions)
     }
 }
